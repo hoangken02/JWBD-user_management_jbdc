@@ -16,34 +16,46 @@ public class UserServlet extends HttpServlet {
 
     private UserDAOImpl userDAO;
 
-    public void init(){
+    public void init() {
         userDAO = new UserDAOImpl();
     }
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String action = request.getParameter("action");
-        if (action == null){
+        System.out.println(action);
+        if (action == null) {
             action = "";
         }
         try {
-        switch (action){
-            case "create":
-                showCreateForm(request,response);
-                break;
-            case "edit":
-                showEditForm(request,response);
-                break;
-            case "delete":
-                deleteUser(request,response);
-                break;
-            default:
-                showListUser(request,response);
-                break;
-        }
-        }catch (SQLException e) {
+            switch (action) {
+                case "create":
+                    showCreateForm(request, response);
+                    break;
+                case "edit":
+                    showEditForm(request, response);
+                    break;
+                case "delete":
+                    deleteUser(request, response);
+                    break;
+                case "sort-by-name":
+                    sortUserByName(request,response);
+                    break;
+                default:
+                    showListUser(request, response);
+                    break;
+            }
+        } catch (SQLException e) {
             throw new RuntimeException(e);
         }
 
+    }
+
+    private void sortUserByName(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        List<User> userList =  userDAO.sortUserByName();
+        request.setAttribute("userList",userList);
+        RequestDispatcher requestDispatcher = request.getRequestDispatcher("user/list.jsp");
+        requestDispatcher.forward(request,response);
     }
 
     private void deleteUser(HttpServletRequest request, HttpServletResponse response) throws SQLException, ServletException, IOException {
@@ -68,7 +80,7 @@ public class UserServlet extends HttpServlet {
     private void showCreateForm(HttpServletRequest request, HttpServletResponse response) {
         RequestDispatcher requestDispatcher = request.getRequestDispatcher("user/create.jsp");
         try {
-            requestDispatcher.forward(request,response);
+            requestDispatcher.forward(request, response);
         } catch (ServletException e) {
             throw new RuntimeException(e);
         } catch (IOException e) {
@@ -79,10 +91,10 @@ public class UserServlet extends HttpServlet {
     private void showListUser(HttpServletRequest request, HttpServletResponse response) {
         List<User> userList = userDAO.selectAllUser();
 
-        request.setAttribute("userList",userList);
+        request.setAttribute("userList", userList);
         RequestDispatcher requestDispatcher = request.getRequestDispatcher("user/list.jsp");
         try {
-            requestDispatcher.forward(request,response);
+            requestDispatcher.forward(request, response);
         } catch (ServletException e) {
             throw new RuntimeException(e);
         } catch (IOException e) {
@@ -93,16 +105,19 @@ public class UserServlet extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String action = request.getParameter("action");
-        if (action == null){
-            action ="";
+        if (action == null) {
+            action = "";
         }
         try {
-            switch (action){
+            switch (action) {
                 case "create":
-                    CreateUser(request,response);
+                    CreateUser(request, response);
                     break;
                 case "edit":
-                    EditUser(request,response);
+                    EditUser(request, response);
+                    break;
+                case "search":
+                    searchUserByCountry(request, response);
                     break;
             }
         } catch (SQLException e) {
@@ -111,13 +126,24 @@ public class UserServlet extends HttpServlet {
 
     }
 
+
+    private void searchUserByCountry(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+        String country = request.getParameter("country");
+        System.out.println(country);
+        List<User> userList = userDAO.selectUserByCountry(country);
+        request.setAttribute("userList", userList);
+        RequestDispatcher requestDispatcher = request.getRequestDispatcher("user/list.jsp");
+        requestDispatcher.forward(request, response);
+    }
+
+
     private void EditUser(HttpServletRequest request, HttpServletResponse response) throws SQLException, ServletException, IOException {
         int id = Integer.parseInt(request.getParameter("id"));
         String name = request.getParameter("name");
         String email = request.getParameter("email");
         String country = request.getParameter("country");
 
-        User user = new User(id,name,email,country);
+        User user = new User(id, name, email, country);
 
         userDAO.updateUser(user);
 
@@ -130,11 +156,11 @@ public class UserServlet extends HttpServlet {
         String email = request.getParameter("email");
         String country = request.getParameter("country");
 
-        User user = new User(name,email,country);
+        User user = new User(name, email, country);
 
         userDAO.insertUser(user);
-        request.setAttribute("message","Success");
+        request.setAttribute("message", "Success");
         RequestDispatcher requestDispatcher = request.getRequestDispatcher("user/create.jsp");
-        requestDispatcher.forward(request,response);
+        requestDispatcher.forward(request, response);
     }
 }

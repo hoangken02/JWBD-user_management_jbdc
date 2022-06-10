@@ -20,6 +20,9 @@ public class UserDAOImpl implements UserDAO {
     private static final String DELETE_USERS_SQL = "delete from users where id = ?;";
     private static final String UPDATE_USERS_SQL = "update users set name = ?,email= ?, country =? where id = ?;";
 
+    private static final String SELECT_USER_BY_COUNTRY = "select id,name,email,country from users where country like ?;";
+
+    private static final String SORT_USER_BY_NAME="select id,name,email,country from users order by name;";
 
     protected Connection getConnection() {
         Connection connection = null;
@@ -45,7 +48,7 @@ public class UserDAOImpl implements UserDAO {
         try (Connection connection = getConnection();
              PreparedStatement preparedStatement = connection.prepareStatement(INSERT_USERS_SQL);
         ) {
-            preparedStatement.setString(1, user.getEmail());
+            preparedStatement.setString(1, user.getName());
             preparedStatement.setString(2, user.getEmail());
             preparedStatement.setString(3, user.getCountry());
             System.out.println(preparedStatement);
@@ -66,16 +69,16 @@ public class UserDAOImpl implements UserDAO {
              // Step 2:Create a statement using connection object
              PreparedStatement preparedStatement = connection.prepareStatement(SELECT_USER_BY_ID);
         ) {
-            preparedStatement.setInt(1,id);
+            preparedStatement.setInt(1, id);
             System.out.println(preparedStatement);
             ResultSet resultSet = preparedStatement.executeQuery();
-            while (resultSet.next()){
+            while (resultSet.next()) {
                 String name = resultSet.getString("name");
                 String email = resultSet.getString("email");
                 String country = resultSet.getString("country");
                 user = new User(id, name, email, country);
             }
-        }catch(SQLException e){
+        } catch (SQLException e) {
             printSQLException(e);
         }
         return user;
@@ -90,22 +93,22 @@ public class UserDAOImpl implements UserDAO {
         System.out.println("======================");
 
         // Step 1: Establishing a Connection
-        try(Connection connection = getConnection();
-            // Step 2:Create a statement using connection object
-            PreparedStatement preparedStatement = connection.prepareStatement(SELECT_ALL_USERS);
-        ){
+        try (Connection connection = getConnection();
+             // Step 2:Create a statement using connection object
+             PreparedStatement preparedStatement = connection.prepareStatement(SELECT_ALL_USERS);
+        ) {
             System.out.println(preparedStatement);
             // Step 3: Execute the query or update query
             ResultSet resultSet = preparedStatement.executeQuery();
             // Step 4: Process the ResultSet object.
-            while (resultSet.next()){
+            while (resultSet.next()) {
                 int id = resultSet.getInt("id");
                 String name = resultSet.getString("name");
                 String email = resultSet.getString("email");
                 String country = resultSet.getString("country");
-                users.add(new User(id,name,email,country));
+                users.add(new User(id, name, email, country));
             }
-        }catch (SQLException e){
+        } catch (SQLException e) {
             printSQLException(e);
         }
         return users;
@@ -116,11 +119,11 @@ public class UserDAOImpl implements UserDAO {
         boolean rowDelete;
 
         System.out.println(DELETE_USERS_SQL);
-        try(Connection connection = getConnection();
-        PreparedStatement preparedStatement = connection.prepareStatement(DELETE_USERS_SQL)) {
-            preparedStatement.setInt(1,id);
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(DELETE_USERS_SQL)) {
+            preparedStatement.setInt(1, id);
             System.out.println(preparedStatement);
-            rowDelete = preparedStatement.executeUpdate()>0;
+            rowDelete = preparedStatement.executeUpdate() > 0;
             System.out.println(rowDelete);
 
         }
@@ -138,11 +141,58 @@ public class UserDAOImpl implements UserDAO {
             preparedStatement.setString(3, user.getCountry());
             preparedStatement.setInt(4, user.getId());
             System.out.println(preparedStatement);
-            rowUpdate = preparedStatement.executeUpdate()>0;
+            rowUpdate = preparedStatement.executeUpdate() > 0;
             System.out.println(rowUpdate);
         }
         return rowUpdate;
     }
+
+    @Override
+    public List<User> selectUserByCountry(String country) {
+        List<User> users = new ArrayList<>();
+
+        try (Connection connection = getConnection();
+             PreparedStatement preparedStatement = connection.prepareStatement(SELECT_USER_BY_COUNTRY);) {
+            preparedStatement.setString(1, "%"+country+"%");
+            System.out.println(preparedStatement);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            while (resultSet.next()) {
+                    int id = resultSet.getInt("id");
+                    String name = resultSet.getString("name");
+                    String email = resultSet.getString("email");
+                    users.add(new User(id, name, email, country));
+
+            }
+            System.out.println(users);
+        } catch (SQLException e) {
+            printSQLException(e);
+        }
+        return users;
+    }
+
+    @Override
+    public List<User> sortUserByName() {
+        List<User> userList = new ArrayList<>();
+
+        try(Connection connection = getConnection();
+        PreparedStatement preparedStatement = connection.prepareStatement(SORT_USER_BY_NAME);
+        ){
+            ResultSet resultSet = preparedStatement.executeQuery();
+            while (resultSet.next()){
+                int id = resultSet.getInt("id");
+                String name = resultSet.getString("name");
+                String email = resultSet.getString("email");
+                String country = resultSet.getString("country");
+                userList.add(new User(id,name,email,country));
+            }
+        }
+        catch (SQLException e){
+            printSQLException(e);
+        }
+        return userList;
+    }
+
     private void printSQLException(SQLException ex) {
         for (Throwable e : ex) {
             if (e instanceof SQLException) {

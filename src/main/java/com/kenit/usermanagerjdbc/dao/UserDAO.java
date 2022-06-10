@@ -15,4 +15,8 @@ public interface UserDAO {
     boolean deleteUser(int id) throws SQLException;
 
     boolean updateUser(User user) throws SQLException;
+
+    List<User> selectUserByCountry(String country);
+
+    List<User> sortUserByName();
 }

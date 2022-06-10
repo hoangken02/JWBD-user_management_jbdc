@@ -10,11 +10,18 @@
     <h1>User Management</h1>
     <h2><a href="/users?action=create">Add New User</a></h2>
 </center>
+<div style="float: left;width: 30%">
+    <form action="/users?action=search" method="post">
+        <input type="text" name="country"  placeholder="Search">
+        <input type="submit">
+    </form>
+</div>
+<br>
 <div align="center">
     <table border="1" cellpadding="5">
         <tr>
             <td>ID</td>
-            <td>Name</td>
+            <td><a href="/users?action=sort-by-name">Name</a></td>
             <td>Email</td>
             <td>Country</td>
             <td>Action</td>
